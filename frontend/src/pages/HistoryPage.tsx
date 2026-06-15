@@ -73,7 +73,16 @@ const HistoryPage: React.FC = () => {
 
   const handleAddExpense = async (data: ExpenseFormData) => {
     try {
+      const date = new Date(data.date);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+
       await createExpense(data);
+
+      setSelectedYear(year);
+      setSelectedMonth(month);
+      updateURL(year, month);
+
       setIsModalOpen(false);
       fetchExpenses();
     } catch (error) {
