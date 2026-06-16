@@ -31,7 +31,7 @@ RSpec.describe "Api::Categories", type: :request do
         }
       }
     end
-  
+
     context "when request is valid" do
       it "creates a new category" do
         expect {
