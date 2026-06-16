@@ -2,11 +2,13 @@
  * Form component for adding/editing expenses
  */
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ExpenseFormData } from "../types";
-import { EXPENSE_CATEGORIES } from "../constants/categories";
-import { TextField, SelectBox, Button } from "../vibes";
+import { TextField, SelectBox, Button, Modal } from "../vibes";
 import { useExpenseForm } from "../hooks/useExpenseForm";
+import { COLORS } from "../constants/colors";
+import { fetchCategories } from "../services/api";
+import { CategoryForm } from "./CategoryForm";
 
 interface ExpenseFormProps {
   initialData?: Partial<ExpenseFormData>;
@@ -27,6 +29,8 @@ export function ExpenseForm({
       onSubmit,
     });
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const formStyle: React.CSSProperties = {
     display: "flex",
     flexDirection: "column",
@@ -39,9 +43,31 @@ export function ExpenseForm({
     marginTop: "0.5rem",
   };
 
-  const categoryOptions = EXPENSE_CATEGORIES.map((category) => ({
-    value: category,
-    label: category,
+  const labelStyle: React.CSSProperties = {
+    fontSize: "0.875rem",
+    fontWeight: 600,
+    color: COLORS.text.primary,
+  };
+
+  const [categories, setCategories] = useState<
+    Array<{ id: number; name: string }>
+  >([]);
+
+  useEffect(() => {
+    fetchCategories()
+      .then(setCategories)
+      .catch(console.error);
+  }, []);
+
+  const refreshCategories = async () => {
+    fetchCategories()
+      .then(setCategories)
+      .catch(console.error);
+  };
+
+  const categoryOptions = categories.map((category) => ({
+    value: category.id.toString(),
+    label: category.name,
   }));
 
   return (
@@ -69,8 +95,19 @@ export function ExpenseForm({
         required
       />
 
+      <div className="flex items-center justify-between">
+        <label style={labelStyle}>
+          Category <span className="text-red-500"></span>
+        </label>
+
+        <Button
+          type="button"
+          variant="primary"
+          onClick={() => setIsModalOpen(true)}
+          size="small">+</Button>
+      </div>
+
       <SelectBox
-        label="Category"
         options={categoryOptions}
         value={formData.category}
         onChange={(e) => handleChange("category", e.target.value)}
@@ -109,6 +146,20 @@ export function ExpenseForm({
           </Button>
         )}
       </div>
+
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        title="Add New Category"
+      >
+        <CategoryForm
+          onSubmit={() => {
+            refreshCategories();
+            setIsModalOpen(false);
+          }}
+          onCancel={() => setIsModalOpen(false)}
+        />
+      </Modal>
     </form>
   );
 }
